@@ -1,0 +1,13 @@
+# Exclude compiled Python files
+__pycache__/
+*.py[cod]
+
+# Exclude virtual environment
+venv/
+
+# Exclude SQLite database file
+expenses.db
+
+# Exclude system files (optional but recommended)
+.DS_Store
+Thumbs.db
