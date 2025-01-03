@@ -112,7 +112,7 @@ def export_csv():
         io.BytesIO(csv_data.encode()),
         mimetype='text/csv',
         as_attachment=True,
-        attachment_filename='expenses.csv'
+        download_name='expenses.csv'
     )
 
 @socketio.on('connect')
