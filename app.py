@@ -115,10 +115,18 @@ def export_csv():
         download_name='expenses.csv'
     )
 
+@app.route('/delete_expense/<int:expense_id>', methods=['POST'])
+@login_required
+def delete_expense(expense_id):
+    if expense_manager.delete_expense(expense_id, current_user.id):
+        flash('Expense deleted successfully', 'success')
+    else:
+        flash('Failed to delete expense', 'error')
+    return redirect(url_for('index'))
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
-

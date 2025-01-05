@@ -4,12 +4,12 @@ def init_db():
     conn = sqlite3.connect('expenses.db')
     cursor = conn.cursor()
 
-    # Drop existing tables if they exist
+   
     cursor.execute('DROP TABLE IF EXISTS expenses')
     cursor.execute('DROP TABLE IF EXISTS budgets')
     cursor.execute('DROP TABLE IF EXISTS users')
 
-    # Create users table
+   
     cursor.execute('''
         CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +19,7 @@ def init_db():
         )
     ''')
 
-    # Create expenses table
+   
     cursor.execute('''
         CREATE TABLE expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +32,7 @@ def init_db():
         )
     ''')
 
-    # Create budgets table
+   
     cursor.execute('''
         CREATE TABLE budgets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,4 +50,5 @@ def init_db():
 
 if __name__ == "__main__":
     init_db()
+
 

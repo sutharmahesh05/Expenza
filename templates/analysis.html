@@ -3,28 +3,29 @@
 {% block content %}
 <div class="bg-white p-6 rounded-lg shadow-md">
     <h2 class="text-2xl font-semibold mb-6">Expense Analysis</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-            <h3 class="text-xl font-semibold mb-4">Total Spent</h3>
-            <p class="text-3xl font-bold text-blue-600">{{ "%.2f"|format(analysis.total_spent) }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-blue-50 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4 text-blue-800">Total Spent</h3>
+            <p class="text-4xl font-bold text-blue-600">₹{{ "%.2f"|format(analysis.total_spent) }}</p>
         </div>
-        <div>
-            <h3 class="text-xl font-semibold mb-4">Top Expense Category</h3>
+        <div class="bg-green-50 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4 text-green-800">Top Expense Category</h3>
             {% if analysis.top_expense_category %}
-            <p class="text-lg">{{ analysis.top_expense_category[0] }}: {{ "%.2f"|format(analysis.top_expense_category[1]) }}</p>
+            <p class="text-2xl font-bold text-green-600">{{ analysis.top_expense_category[0] }}</p>
+            <p class="text-xl text-green-700">₹{{ "%.2f"|format(analysis.top_expense_category[1]) }}</p>
             {% else %}
-            <p class="text-lg">No expenses recorded yet.</p>
+            <p class="text-xl text-green-700">No expenses recorded yet.</p>
             {% endif %}
         </div>
     </div>
-    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div>
             <h3 class="text-xl font-semibold mb-4">Expenses by Category</h3>
             <ul class="divide-y divide-gray-200">
                 {% for category, amount in analysis.category_totals.items() %}
-                <li class="py-4 flex justify-between">
+                <li class="py-4 flex justify-between items-center">
                     <span class="text-gray-900">{{ category }}</span>
-                    <span class="text-gray-600">${{ "%.2f"|format(amount) }}</span>
+                    <span class="text-gray-600 font-medium">₹{{ "%.2f"|format(amount) }}</span>
                 </li>
                 {% endfor %}
             </ul>
@@ -34,21 +35,31 @@
             <ul class="divide-y divide-gray-200">
                 {% for category, status in analysis.budget_status.items() %}
                 <li class="py-4">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-center mb-1">
                         <span class="text-gray-900">{{ category }}</span>
-                        <span class="text-gray-600">{{ "%.2f"|format(status.spent) }} / {{ "%.2f"|format(status.budget) }}</span>
+                        <span class="text-gray-600 font-medium">₹{{ "%.2f"|format(status.spent) }} / ₹{{ "%.2f"|format(status.budget) }}</span>
                     </div>
-                    <div class="mt-2 h-2 bg-gray-200 rounded-full">
-                        <div class="h-full bg-blue-600 rounded-full" style="width: {{ (status.spent / status.budget * 100)|round|int }}%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ (status.spent / status.budget * 100)|round|int }}%"></div>
                     </div>
                 </li>
                 {% endfor %}
             </ul>
         </div>
     </div>
-    <div class="mt-8">
-        <h3 class="text-xl font-semibold mb-4">Expense Distribution</h3>
-        <canvas id="expenseChart" width="400" height="400"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div>
+            <h3 class="text-xl font-semibold mb-4">Expense Distribution</h3>
+            <canvas id="expenseChart" width="400" height="400"></canvas>
+        </div>
+        <div>
+            <h3 class="text-xl font-semibold mb-4">Monthly Expenses (Current Year)</h3>
+            <canvas id="monthlyExpenseChart" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <div>
+        <h3 class="text-xl font-semibold mb-4">Yearly Expenses</h3>
+        <canvas id="yearlyExpenseChart" width="800" height="400"></canvas>
     </div>
 </div>
 {% endblock %}
@@ -57,7 +68,7 @@
 <script>
     const ctx = document.getElementById('expenseChart').getContext('2d');
     const expenseChart = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: [{% for category, amount in analysis.category_totals.items() %}'{{ category }}',{% endfor %}],
             datasets: [{
@@ -84,6 +95,72 @@
                 title: {
                     display: true,
                     text: 'Expense Distribution'
+                }
+            }
+        }
+    });
+
+    const monthlyCtx = document.getElementById('monthlyExpenseChart').getContext('2d');
+    const monthlyExpenseChart = new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for month, amount in analysis.monthly_expenses %}'{{ month }}',{% endfor %}],
+            datasets: [{
+                label: 'Monthly Expenses',
+                data: [{% for month, amount in analysis.monthly_expenses %}{{ amount }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '₹' + value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Expenses (Current Year)'
+                }
+            }
+        }
+    });
+
+    const yearlyCtx = document.getElementById('yearlyExpenseChart').getContext('2d');
+    const yearlyExpenseChart = new Chart(yearlyCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for year, amount in analysis.yearly_expenses %}'{{ year }}',{% endfor %}],
+            datasets: [{
+                label: 'Yearly Expenses',
+                data: [{% for year, amount in analysis.yearly_expenses %}{{ amount }},{% endfor %}],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '₹' + value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Yearly Expenses'
                 }
             }
         }
